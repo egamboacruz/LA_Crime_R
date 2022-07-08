@@ -226,15 +226,12 @@ eda_data <- eda_data %>%
 
 # What time of day does vehicle theft happen most.
 eda_data %>% 
-  select(crime_desc,time_occured) %>% 
+  select(crime_desc,time_occured,time_period) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(time_occured) %>% 
+  group_by(hour(time_occured),time_period) %>% 
   count(crime_desc) %>% 
-  ggplot(aes(x=time_occured,y=n)) + geom_point() +
-  scale_x_datetime(breaks = scales::date_breaks("30 mins"), date_labels = "%H:%M")
-
-
-
+  ggplot(aes(x=`hour(time_occured)`,y=n,fill=time_period)) + 
+  geom_bar(stat = "identity",position = "dodge")
 
 
 
