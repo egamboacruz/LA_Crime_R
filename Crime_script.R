@@ -16,9 +16,9 @@ str(data)
 names(data) <- tolower(names(data))
 
 # rename columns
-data <- rename(data, date_reported = date.rptd) # Stop
-data <- rename(data, date_occured = date.occ)
-data <- rename(data, time_occured = time.occ)
+data <- rename(data, date_reported = date.rptd)
+data <- rename(data, date_occurred = date.occ)
+data <- rename(data, time_occurred = time.occ)
 data <- rename(data, area_name = area.name)
 data <- rename(data, crime_cd = crm.cd)
 data <- rename(data, crime_desc = crm.cd.desc)
@@ -36,25 +36,22 @@ str(data)
 sum(is.na(data)) #310,620 null values
 
 
-# Date_reported and Date_occured are all reported  
+# Date_reported and date_occurred are all reported  
 # at midnight seems to report at the exact date. so it is safe to remove.
 
 # remove 12:00:00 AM from both columns
 data$date_reported <- gsub("0:00","",as.character(data$date_reported))
-data$date_occured <- gsub("0:00","",as.character(data$date_occured))
+data$date_occurred <- gsub("0:00","",as.character(data$date_occurred))
 
 # trim white space
 data$date_reported <- trimws(data$date_reported)
-data$date_occured <- trimws(data$date_occured)
+data$date_occurred <- trimws(data$date_occurred)
 
 # parse columns from char to Date datatype
 data$date_reported <-mdy(data$date_reported)
-data$date_occured <- mdy(data$date_occured)
+data$date_occurred <- mdy(data$date_occurred)
 
 # USED Excel to clean Time. from military to standard time.
-
-# char-time Parsed to time 
-data$time_occured <- hms::as_hms(data$time_occured)
 
 # I want to change victim descent from abbreviation to the whole word.
 # Could also use dplyr::case_when
@@ -122,8 +119,8 @@ data <- data %>%
 
 #Crime most committed in LA between 2020-2022
 data %>% 
-  select(crime_desc, date_occured) %>% 
-  filter(between(date_occured,'2020-01-01','2021-12-31')) %>% 
+  select(crime_desc, date_occurred) %>% 
+  filter(between(date_occurred,'2020-01-01','2021-12-31')) %>% 
   group_by(crime_desc) %>% 
   count(crime_desc) %>% 
   arrange(desc(n))
@@ -144,7 +141,7 @@ data %>%
 # So i can save time I will make a new data frame 
 # with the years between 2020-2021
 eda_data <- data %>% 
-  filter(between(date_occured,'2020-01-01','2021-12-31'))
+  filter(between(date_occurred,'2020-01-01','2021-12-31'))
 # only works with data.table package 
 
 
@@ -162,11 +159,11 @@ eda_data <- data %>%
 
 # vehicle stolen by date Through out the years.
 eda_data %>% 
-  select(crime_desc,date_occured) %>% 
+  select(crime_desc,date_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(date_occured,year=factor(year(date_occured))) %>% 
+  group_by(date_occurred,year=factor(year(date_occurred))) %>% 
   count(crime_desc) %>% 
-  ggplot(aes(x=date_occured,y=n)) +
+  ggplot(aes(x=date_occurred,y=n)) +
   geom_point(aes(color=year),size=3) + geom_smooth() +
   scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
   scale_x_date(date_breaks = "1 month", date_labels = "%B") +
@@ -180,10 +177,10 @@ eda_data %>%
 
 # What months do vehicles get stolen the most.
 eda_data %>% 
-  select(crime_desc,date_occured) %>% 
+  select(crime_desc,date_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(month=factor(month(date_occured,label=TRUE,abbr=TRUE)),
-           year=factor(year(date_occured))) %>% 
+  group_by(month=factor(month(date_occurred,label=TRUE,abbr=TRUE)),
+           year=factor(year(date_occurred))) %>% 
   count(crime_desc) %>% 
   ggplot(aes(x=month,
              y=n,
@@ -200,10 +197,10 @@ eda_data %>%
 
 # What days of the week does this happen. #dow-(dayOfWeek)
 eda_data %>% 
-  select(crime_desc,date_occured) %>% 
+  select(crime_desc,date_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(dow=factor(wday(date_occured,label=TRUE,abbr=TRUE)),
-                      year=factor(year(date_occured))) %>%
+  group_by(dow=factor(wday(date_occurred,label=TRUE,abbr=TRUE)),
+                      year=factor(year(date_occurred))) %>%
   count(crime_desc) %>% 
   ggplot(aes(x=dow,
              y=n,
@@ -218,34 +215,26 @@ eda_data %>%
        caption="Data Provided by Los Angeles Police Department")
 #________________________
 
-# Add a new column displaying time period of the day AM or PM 
-eda_data <- eda_data %>% 
-  mutate(
-    time_period = dplyr::case_when(
-      am(time_occured) == TRUE ~ "AM",
-      pm(time_occured) == TRUE ~ "PM"
-    )
-  )
-
-
 # create new column with date and time occurred combined
 eda_data <- eda_data %>%
-  unite("date_time",
+  unite("datetime_occurred",
         sep = " ",
-        date_occured:time_occured,na.rm = TRUE,
+        date_occurred:time_occurred,na.rm = TRUE,
         remove = FALSE)
+str(eda_data)
+
+# parse to POSIXct with lubridate
+eda_data$datetime_occurred <- ymd_hms(eda_data$datetime_occurred)
 
 
 # What time of day does vehicle theft happen most.
 eda_data %>% 
-  select(crime_desc,time_occured,time_period) %>% 
+  select(crime_desc,datetime_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(hour(time_occured),time_period) %>% 
+  group_by(time=hour(datetime_occurred)) %>% 
   count(crime_desc) %>% 
-  ggplot(aes(x=`hour(time_occured)`,y=n,fill=time_period)) + 
-  geom_bar(stat = "identity")
-
-
+  ggplot(aes(x=time,y=n)) + 
+  geom_path(color="Red")
 
 
 
