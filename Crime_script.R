@@ -215,6 +215,15 @@ eda_data %>%
        caption="Data Provided by Los Angeles Police Department")
 #________________________
 
+# Add a new column displaying time period of the day AM or PM 
+eda_data <- eda_data %>% 
+  mutate(
+    time_period = dplyr::case_when(
+      am(time_occured) == TRUE ~ "AM",
+      pm(time_occured) == TRUE ~ "PM"
+    )
+  )
+
 # What time of day does vehicle theft happen most.
 eda_data %>% 
   select(crime_desc,time_occured) %>% 
@@ -225,14 +234,7 @@ eda_data %>%
   scale_x_datetime(breaks = scales::date_breaks("30 mins"), date_labels = "%H:%M")
 
 
-# Add a new column displaying time period of the day AM or PM 
-eda_data <- eda_data %>% 
-  mutate(
-    time_period = dplyr::case_when(
-      am(time_occured) == TRUE ~ "AM",
-      pm(time_occured) == TRUE ~ "PM"
-    )
-  )
+
 
 
 
