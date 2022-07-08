@@ -225,11 +225,15 @@ eda_data %>%
   scale_x_datetime(breaks = scales::date_breaks("30 mins"), date_labels = "%H:%M")
 
 
-
+# Add a new column displaying time period of the day AM or PM 
 eda_data <- eda_data %>% 
   mutate(
-    
+    time_period = dplyr::case_when(
+      am(time_occured) == TRUE ~ "AM",
+      pm(time_occured) == TRUE ~ "PM"
+    )
   )
+
 
 
 
