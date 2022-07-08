@@ -2,6 +2,7 @@ library(tidyverse)
 library(dplyr)
 library(lubridate)
 library(ggplot2)
+library(tidyr)
 
 # Get data
 data <- read.csv("Crime_Data_from_2020_to_Present.csv")
@@ -88,6 +89,7 @@ data %>%
 # There is no 1 year old victims, 0 years old are not victims -1 are unknowns
 
 #Create an age group and a development stage. helps with the analysis.
+# Development stage.
 data <- data %>%
   mutate(
     dev_stage = dplyr::case_when(
@@ -100,7 +102,7 @@ data <- data %>%
       vict_age > 59  ~ "Senior"
     )
   )
-
+# Age Group
 data <- data %>%
   mutate(
     age_group = dplyr::case_when(
@@ -143,6 +145,7 @@ data %>%
 # with the years between 2020-2021
 eda_data <- data %>% 
   filter(between(date_occured,'2020-01-01','2021-12-31'))
+# only works with data.table package 
 
 
  # Stolen Vehicle 
@@ -224,6 +227,15 @@ eda_data <- eda_data %>%
     )
   )
 
+
+# create new column with date and time occurred combined
+eda_data <- eda_data %>%
+  unite("date_time",
+        sep = " ",
+        date_occured:time_occured,na.rm = TRUE,
+        remove = FALSE)
+
+
 # What time of day does vehicle theft happen most.
 eda_data %>% 
   select(crime_desc,time_occured,time_period) %>% 
@@ -231,12 +243,7 @@ eda_data %>%
   group_by(hour(time_occured),time_period) %>% 
   count(crime_desc) %>% 
   ggplot(aes(x=`hour(time_occured)`,y=n,fill=time_period)) + 
-  geom_bar(stat = "identity",position = "dodge")
-
-
-
-
-
+  geom_bar(stat = "identity")
 
 
 
