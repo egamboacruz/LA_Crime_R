@@ -3,7 +3,7 @@ library(dplyr)
 library(lubridate)
 library(ggplot2)
 library(tidyr)
-
+library(reshape2)
 # Get data
 data <- read.csv("Crime_Data_from_2020_to_Present.csv")
 
@@ -171,7 +171,7 @@ eda_data %>%
        x="Months", y="Vehicle Theft Cases",
        color="Year",
        caption="Data Provided by Los Angeles Police Department") +
-  theme_minimal()
+  theme(axis.text.x = element_text(angle = 45,vjust = .5))
 #_________________
 
 # What months do vehicles get stolen the most.
@@ -224,17 +224,20 @@ str(eda_data)
 
 # parse to POSIXct with lubridate
 eda_data$datetime_occurred <- ymd_hms(eda_data$datetime_occurred)
+str(eda_data)
 
-
-# What time of day does vehicle theft happen most.
 eda_data %>% 
   select(crime_desc,datetime_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(datetime_occurred) %>% 
+  group_by(time=hour(datetime_occurred),year=year(datetime_occurred)) %>% 
   count(crime_desc) %>% 
-  ggplot(aes(x=datetime_occurred,y=n)) + 
-  geom_line() +
-  scale_x_datetime(breaks = "1 hour")
+  ggplot(aes(x=time,y=n,color=factor(year))) + 
+  geom_line(aes(group=year)) +
+  scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
+  labs(title = "Car-Theft By Time Of Day",
+       subtitle = "What time of day are car theft most prone.",
+       x="Time",y="Car Theft",color="Year")
+  
 
 
 
