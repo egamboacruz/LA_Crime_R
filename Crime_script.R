@@ -112,7 +112,6 @@ data <- data %>%
       vict_age > 59  ~ "60+"
     )
   )
-
 #________________________
 #__________________ EDA ____________________________________________
  # Looking through crime data from Jan 01-2020 to Dec-31-2021
@@ -231,12 +230,11 @@ eda_data$datetime_occurred <- ymd_hms(eda_data$datetime_occurred)
 eda_data %>% 
   select(crime_desc,datetime_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(time=hour(datetime_occurred)) %>% 
+  group_by(datetime_occurred) %>% 
   count(crime_desc) %>% 
-  ggplot(aes(x=time,y=n)) + 
-  geom_path(color="Red")
-
-
+  ggplot(aes(x=datetime_occurred,y=n)) + 
+  geom_line() +
+  scale_x_datetime(breaks = "1 hour")
 
 
 
