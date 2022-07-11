@@ -146,10 +146,10 @@ eda_data <- data %>%
 
  # Stolen Vehicle 
                     # what we need to find out
-# How has vehicle theft changed through the years. -
-# What months does it happen the most -
-# What days of the week does this happen. -
-# What time in the day does this happen.
+# How has vehicle theft changed through the years. -1
+# What months does it happen the most - 2
+# What days of the week does this happen. - 3
+# What time in the day does this happen. - 4
 # What areas are affected the most (area name)
 # Where does this happen (premis_desc)
 # "maybe" what streets are affected the most.
@@ -239,7 +239,13 @@ eda_data %>%
        subtitle = "What time of day are car theft most prone.",
        x="Time (Millitary Time)",y="Car Theft Cases",color="Year",
        caption="Data Provided by Los Angeles Police Department")
-  
+
+# What area is most affected by car theft
+eda_data %>% 
+  select(area_name,crime_desc) %>% 
+  filter(crime_desc == "VEHICLE - STOLEN") %>% 
+  group_by(area_name) %>% 
+  count(crime_desc)
 
 
 
