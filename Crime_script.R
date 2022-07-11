@@ -166,8 +166,8 @@ eda_data %>%
   geom_point(aes(color=year),size=3) + geom_smooth() +
   scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
   scale_x_date(date_breaks = "1 month", date_labels = "%B") +
-  labs(title = "Vehicle Theft Through The Years",
-       subtitle="Vehicle Theft Case Count Through The Years",
+  labs(title = "Vehicle Theft Through (2020-2021)",
+       subtitle="Vehicle Theft Case Count Through 2020-2021",
        x="Months", y="Vehicle Theft Cases",
        color="Year",
        caption="Data Provided by Los Angeles Police Department") +
@@ -226,6 +226,7 @@ str(eda_data)
 eda_data$datetime_occurred <- ymd_hms(eda_data$datetime_occurred)
 str(eda_data)
 
+#What time of the day care theft happens the most.
 eda_data %>% 
   select(crime_desc,datetime_occurred) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
@@ -236,7 +237,8 @@ eda_data %>%
   scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
   labs(title = "Car-Theft By Time Of Day",
        subtitle = "What time of day are car theft most prone.",
-       x="Time",y="Car Theft",color="Year")
+       x="Time (Millitary Time)",y="Car Theft Cases",color="Year",
+       caption="Data Provided by Los Angeles Police Department")
   
 
 
