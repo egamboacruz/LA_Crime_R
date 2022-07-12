@@ -1,2 +1,4 @@
-# LA_CrimeData
-This project is an analytical analysis of all types of crime occurred in Los Angeles and its counties. 
+# Car Theft In Los Angeles
+## This project is an analytical analysis of car thefts in LA. 
+
+### My community has seen a spike in car theft 
