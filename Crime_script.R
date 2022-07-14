@@ -5,73 +5,21 @@ library(ggplot2)
 library(tidyr)
 library(reshape2)
 # Get data
-data <- read.csv("Original_Crime_Data_From_2020_to_Present.csv")
+data<-read_csv(
+  "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=523509&$offset=100")
 
 #Check table structure
 str(data)
 
 #___________________________ DATA CLEAN
-
-# change all column names to lowercase.
-names(data) <- tolower(names(data))
-# rename columns
-data <- rename(data, date_reported = date.rptd)
-data <- rename(data, date_occurred = date.occ)
-data <- rename(data, time_occurred = time.occ)
-data <- rename(data, area_name = area.name)
-data <- rename(data, crime_cd = crm.cd)
-data <- rename(data, crime_desc = crm.cd.desc)
-data <- rename(data, vict_age = vict.age)
-data <- rename(data, vict_sex = vict.sex)
-data <- rename(data, vict_descent = vict.descent)
-data <- rename(data, premis_cd = premis.cd)
-data <- rename(data, premis_desc = premis.desc)
-data <- rename(data, weapon_used_cd = weapon.used.cd)
-data <- rename(data, weapon_desc = weapon.desc)
-data <- rename(data, cross_street = cross.street)
-# Check how many missing values are there
-sum(is.na(data)) #310,620 null values
-
-# Date_reported and date_occurred are all reported  
-# at midnight seems to report at the exact date. so it is safe to remove.
-# remove 12:00:00 AM from both columns, just means it was reported on that day
-data$date_reported <- gsub("12:00:00 AM","",as.character(data$date_reported))
-data$date_occurred <- gsub("12:00:00 AM","",as.character(data$date_occurred))
-# trim white space
-data$date_reported <- trimws(data$date_reported)
-data$date_occurred <- trimws(data$date_occurred)
-
-# parse columns from char to Date datatype
-data$date_reported <-mdy(data$date_reported)
-data$date_occurred <- mdy(data$date_occurred)
-
-# Times from midnight to 09 are missing zero's 
-# Compared times from the original table where data was collected from 
-# it assured me the times were just missing zeros.
-data$time_occurred <-
-  case_when(
-    nchar(data$time_occurred) == 4 ~ paste("",data$time_occurred,sep = ""),
-    nchar(data$time_occurred) == 3 ~ paste("0",data$time_occurred,sep = ""),
-    nchar(data$time_occurred) == 2 ~ paste("00",data$time_occurred,sep = ""),
-    nchar(data$time_occurred) == 1 ~ paste("000",data$time_occurred,sep = ""),
-  )
-
-# making sure all times have exactly four digits.
-sum(nchar(data$time.occ) < 4) # = 0 no times are less than four digits
-sum(nchar(data$time.occ) > 4) # = 0 no times are greater than four no extra digit
-
-# add colons between hour : minutes
-data$time_occurred <- gsub("^(.{2})(.*)$",
-                               "\\1:\\2",
-                           data$time_occurred)
 # combine date and time occurred
 data <- data %>%
-  unite("datetime_occurred",
+  unite("datetime_occ",
         sep = " ",
-        date_occurred:time_occurred,na.rm = TRUE,
+        date_occ:time_occ,na.rm = TRUE,
         remove = FALSE)
 #format it to POSIXct
-data$datetime_occurred <- ymd_hm(data$datetime_occurred)
+data$datetime_occ <- ymd_hm(data$datetime_occ)
 
 # I want to change victim descent from abbreviation to the whole word.
 # Could also use dplyr::case_when
@@ -138,8 +86,8 @@ data <- data %>%
 
 #Crime most committed in LA between 2020-2022
 data %>% 
-  select(crime_desc, date_occurred) %>% 
-  filter(between(date_occurred,'2020-01-01','2021-12-31')) %>% 
+  select(crime_desc, date_occ) %>% 
+  filter(between(date_occ,'2020-01-01','2021-12-31')) %>% 
   group_by(crime_desc) %>% 
   count(crime_desc) %>% 
   arrange(desc(n))
@@ -160,7 +108,7 @@ data %>%
 # So i can save time I will make a new data frame 
 # with the years between 2020-2021
 eda_data <- data %>% 
-  filter(between(date_occurred,'2020-01-01','2021-12-31'))
+  filter(between(date_occ,'2020-01-01','2021-12-31'))
 # only works with data.table packages 
 
 
@@ -178,11 +126,11 @@ eda_data <- data %>%
 
 # vehicle stolen by date Through out the years.
 eda_data %>% 
-  select(crime_desc,date_occurred) %>% 
+  select(crime_desc,date_occ) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(date_occurred,year=factor(year(date_occurred))) %>% 
+  group_by(date_occ,year=factor(year(date_occ))) %>% 
   count(crime_desc) %>% 
-  ggplot(aes(x=date_occurred,y=n)) +
+  ggplot(aes(x=date_occ,y=n)) +
   geom_point(aes(color=year),size=3) + geom_smooth() +
   scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
   scale_x_date(date_breaks = "1 month", date_labels = "%B") +
@@ -196,10 +144,10 @@ eda_data %>%
 
 # What months do vehicles get stolen the most.
 eda_data %>% 
-  select(crime_desc,date_occurred) %>% 
+  select(crime_desc,date_occ) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(month=factor(month(date_occurred,label=TRUE,abbr=TRUE)),
-           year=factor(year(date_occurred))) %>% 
+  group_by(month=factor(month(date_occ,label=TRUE,abbr=TRUE)),
+           year=factor(year(date_occ))) %>% 
   count(crime_desc) %>% 
   ggplot(aes(x=month,
              y=n,
@@ -216,10 +164,10 @@ eda_data %>%
 
 # What days of the week does this happen. #dow-(dayOfWeek)
 eda_data %>% 
-  select(crime_desc,date_occurred) %>% 
+  select(crime_desc,date_occ) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(dow=factor(wday(date_occurred,label=TRUE,abbr=TRUE)),
-                      year=factor(year(date_occurred))) %>%
+  group_by(dow=factor(wday(date_occ,label=TRUE,abbr=TRUE)),
+                      year=factor(year(date_occ))) %>%
   count(crime_desc) %>% 
   ggplot(aes(x=dow,
              y=n,
@@ -236,9 +184,9 @@ eda_data %>%
 
 #What time of the day care theft happens the most.
 eda_data %>% 
-  select(crime_desc,datetime_occurred) %>% 
+  select(crime_desc,datetime_occ) %>% 
   filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(time=hour(datetime_occurred),year=year(datetime_occurred)) %>% 
+  group_by(time=hour(datetime_occ),year=year(datetime_occ)) %>% 
   count(crime_desc) %>% 
   ggplot(aes(x=time,y=n,color=factor(year))) + 
   geom_line(aes(group=year)) +
