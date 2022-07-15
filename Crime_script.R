@@ -12,7 +12,7 @@ data<-read_csv(
 str(data)
 
 #___________________________ DATA CLEAN
-# combine date and time occurred
+# combine date and time occurred as a new column
 data <- data %>%
   unite("datetime_occ",
         sep = " ",
@@ -20,6 +20,7 @@ data <- data %>%
         remove = FALSE)
 #format it to POSIXct
 data$datetime_occ <- ymd_hm(data$datetime_occ)
+str(data)
 
 # I want to change victim descent from abbreviation to the whole word.
 # Could also use dplyr::case_when
@@ -48,10 +49,26 @@ min(data$vict_age) # -1 ??? what does that mean
 max(data$vict_age) # 120 years old.
 
 # Check if ages -1:1 years are victim ages or unknowns
-data %>% 
-  filter(between(vict_age,-1,1)) %>% 
-  arrange(desc(vict_age))
-# There is no 1 year old victims, 0 years old are not victims -1 are unknowns
+#count how many ages between -1 and 1
+data %>%
+  select(vict_age,vict_sex) %>% 
+  filter(between(vict_age,-1,1), vict_sex != "X") %>% 
+  group_by(vict_sex,vict_age) %>% 
+  count(vict_sex)
+
+# I strongly believe Age zero stands for someone calling 911 
+# their age was not given or recorded. 
+print(data %>% 
+  select(vict_age,vict_sex,crm_cd_desc) %>% 
+  filter(vict_age == 0,vict_sex != "X") %>% 
+    tail(),n=100)
+
+# checking what age -1 represents
+print(data %>% 
+        select(vict_age,vict_sex,crm_cd_desc) %>% 
+        filter(vict_age == -1,vict_sex != "X") %>% 
+        tail(),n=100)
+# out of over 500,000 observations it seems that -1 is a mistake
 
 #Create an age group and a development stage. helps with the analysis.
 # Development stage.
@@ -84,12 +101,12 @@ data <- data %>%
 #__________________ EDA ____________________________________________
  # Looking through crime data from Jan 01-2020 to Dec-31-2021
 
-#Crime most committed in LA between 2020-2022
+# Crime most committed in LA between 2020-2021
 data %>% 
-  select(crime_desc, date_occ) %>% 
+  select(crm_cd_desc, date_occ) %>% 
   filter(between(date_occ,'2020-01-01','2021-12-31')) %>% 
-  group_by(crime_desc) %>% 
-  count(crime_desc) %>% 
+  group_by(crm_cd_desc) %>% 
+  count(crm_cd_desc) %>% 
   arrange(desc(n))
 
 # Top 10 Most common crimes in LA
@@ -111,6 +128,9 @@ eda_data <- data %>%
   filter(between(date_occ,'2020-01-01','2021-12-31'))
 # only works with data.table packages 
 
+str(eda_data)
+
+
 
  # Stolen Vehicle 
                     # what we need to find out
@@ -123,14 +143,13 @@ eda_data <- data %>%
 # "maybe" what streets are affected the most.
 # How can we fix this.
 
-
 # vehicle stolen by date Through out the years.
 eda_data %>% 
-  select(crime_desc,date_occ) %>% 
-  filter(crime_desc == "VEHICLE - STOLEN") %>% 
+  select(crm_cd_desc,date_occ) %>% 
+  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
   group_by(date_occ,year=factor(year(date_occ))) %>% 
-  count(crime_desc) %>% 
-  ggplot(aes(x=date_occ,y=n)) +
+  count(crm_cd_desc) %>% 
+  ggplot(aes(x=as_date(date_occ),y=n)) +
   geom_point(aes(color=year),size=3) + geom_smooth() +
   scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
   scale_x_date(date_breaks = "1 month", date_labels = "%B") +
@@ -144,11 +163,11 @@ eda_data %>%
 
 # What months do vehicles get stolen the most.
 eda_data %>% 
-  select(crime_desc,date_occ) %>% 
-  filter(crime_desc == "VEHICLE - STOLEN") %>% 
+  select(crm_cd_desc,date_occ) %>% 
+  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
   group_by(month=factor(month(date_occ,label=TRUE,abbr=TRUE)),
            year=factor(year(date_occ))) %>% 
-  count(crime_desc) %>% 
+  count(crm_cd_desc) %>% 
   ggplot(aes(x=month,
              y=n,
              fill=year)) +
@@ -164,11 +183,11 @@ eda_data %>%
 
 # What days of the week does this happen. #dow-(dayOfWeek)
 eda_data %>% 
-  select(crime_desc,date_occ) %>% 
-  filter(crime_desc == "VEHICLE - STOLEN") %>% 
+  select(crm_cd_desc,date_occ) %>% 
+  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
   group_by(dow=factor(wday(date_occ,label=TRUE,abbr=TRUE)),
                       year=factor(year(date_occ))) %>%
-  count(crime_desc) %>% 
+  count(crm_cd_desc) %>% 
   ggplot(aes(x=dow,
              y=n,
              fill=year)) +
@@ -184,25 +203,32 @@ eda_data %>%
 
 #What time of the day care theft happens the most.
 eda_data %>% 
-  select(crime_desc,datetime_occ) %>% 
-  filter(crime_desc == "VEHICLE - STOLEN") %>% 
+  select(crm_cd_desc,datetime_occ) %>% 
+  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
   group_by(time=hour(datetime_occ),year=year(datetime_occ)) %>% 
-  count(crime_desc) %>% 
+  count(crm_cd_desc) %>% 
   ggplot(aes(x=time,y=n,color=factor(year))) + 
   geom_line(aes(group=year)) +
   scale_color_manual(values = c("#0F4C5C","#FB8B24")) +
-  labs(title = "Car-Theft By Time Of Day",
+  labs(title = "Vehicle-Theft By Time Of Day",
        subtitle = "What time of day are car theft most prone.",
-       x="Time (Millitary Time)",y="Car Theft Cases",color="Year",
+       x="Time",y="Vehicle-Theft Cases",color="Year",
        caption="Data Provided by Los Angeles Police Department")
 
 # What area is most affected by car theft
 eda_data %>% 
-  select(area_name,crime_desc) %>% 
-  filter(crime_desc == "VEHICLE - STOLEN") %>% 
-  group_by(area_name) %>% 
-  count(crime_desc) %>% 
-  ggplot()
+  select(area_name,crm_cd_desc,date_occ) %>% 
+  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
+  group_by(area_name,year=factor(year(date_occ))) %>% 
+  count(crm_cd_desc) %>% 
+  ggplot(aes(x=area_name,y=n,fill=year)) +
+  geom_text(aes(label=n),position=position_dodge(1),vjust=-0.5,size=3) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("#0F4C5C","#FB8B24")) +
+  labs(title = "Vehicle-Theft By Area",
+       subtitle = "Vehicle-Theft Cases by Area In Los Angeles",
+       x="Area",y="Car Theft Cases", fill = "Year",
+       caption="Data Provided by Los Angeles Police Department")
 
 
 
