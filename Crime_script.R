@@ -140,7 +140,7 @@ str(eda_data)
 # What days of the week does this happen. - 3
 # What time in the day does this happen. - 4
 # What areas are affected the most (area name) - 5
-# Where does this happen (premis_desc)
+# Where does this happen (premis_desc) - 6
 # "maybe" what streets are affected the most.
 # How can we fix this.
 
@@ -158,7 +158,7 @@ eda_data %>%
        subtitle="Vehicle Theft Case Count Through 2020-2021",
        x="Months", y="Vehicle Theft Cases",
        color="Year",
-       caption="Data Provided by Los Angeles Police Department") +
+       caption="Data Provided By Los Angeles Police Department") +
   theme(axis.text.x = element_text(angle = 45,vjust = .5))
 #_________________
 
@@ -179,7 +179,7 @@ eda_data %>%
        subtitle="Vehicle Theft Cases Count By Month",
        x="Months", y="Vehicle Theft Cases",
        fill="Year",
-       caption="Data Provided by Los Angeles Police Department")
+       caption="Data Provided By Los Angeles Police Department")
 #___________________
 
 # What days of the week does this happen. #dow-(dayOfWeek)
@@ -199,7 +199,7 @@ eda_data %>%
        subtitle="Vehicle Theft Cases Count By Day Of The Week",
        x="Months", y="Vehicle Theft Cases",
        fill="Year",
-       caption="Data Provided by Los Angeles Police Department")
+       caption="Data Provided By Los Angeles Police Department")
 #________________________
 
 #What time of the day care theft happens the most.
@@ -214,7 +214,7 @@ eda_data %>%
   labs(title = "Vehicle-Theft By Time Of Day",
        subtitle = "What time of day are car theft most prone.",
        x="Time",y="Vehicle-Theft Cases",color="Year",
-       caption="Data Provided by Los Angeles Police Department")
+       caption="Data Provided By Los Angeles Police Department")
 
 # What area is most affected by car theft
 eda_data %>% 
@@ -229,15 +229,25 @@ eda_data %>%
   labs(title = "Vehicle-Theft By Area",
        subtitle = "Vehicle-Theft Cases by Area In Los Angeles",
        x="Area",y="Car Theft Cases", fill = "Year",
-       caption="Data Provided by Los Angeles Police Department")
+       caption="Data Provided By Los Angeles Police Department")
 #_____________________________________]
 
-print(eda_data %>% 
+# Where vehicle theft happens most.
+eda_data %>% 
   select(premis_desc,crm_cd_desc,date_occ) %>% 
-  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
-  group_by(premis_desc,Year=year(date_occ)) %>% 
-  count(crm_cd_desc),n=77)
-
+  filter(crm_cd_desc == "VEHICLE - STOLEN", ) %>% 
+  group_by(premis_desc,Year=factor(year(date_occ))) %>% 
+  count(crm_cd_desc) %>%
+  filter(n > 300) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(x=premis_desc,y=n,fill=Year)) +
+  geom_bar(stat="identity",position = "dodge") +
+  geom_text(aes(label=n),position=position_dodge(1),vjust=-0.5,size=5) +
+  scale_fill_manual(values = c("#0F4C5C","#FB8B24")) +
+  labs(title = "Vehicle-Theft By Premises",
+       subtitle = "Vehicle-Theft Cases By Premise Location",
+       x="Location",y="Car Theft Cases",
+       caption="Data Provided By Los Angeles Police Department")
 
 
 
