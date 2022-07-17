@@ -18,6 +18,7 @@ data <- data %>%
         sep = " ",
         date_occ:time_occ,na.rm = TRUE,
         remove = FALSE)
+
 #format it to POSIXct
 data$datetime_occ <- ymd_hm(data$datetime_occ)
 str(data)
@@ -126,7 +127,7 @@ data %>%
 # with the years between 2020-2021
 eda_data <- data %>% 
   filter(between(date_occ,'2020-01-01','2021-12-31'))
-# only works with data.table packages 
+# only works with data.table package 
 
 str(eda_data)
 
@@ -138,7 +139,7 @@ str(eda_data)
 # What months does it happen the most - 2
 # What days of the week does this happen. - 3
 # What time in the day does this happen. - 4
-# What areas are affected the most (area name)
+# What areas are affected the most (area name) - 5
 # Where does this happen (premis_desc)
 # "maybe" what streets are affected the most.
 # How can we fix this.
@@ -229,6 +230,18 @@ eda_data %>%
        subtitle = "Vehicle-Theft Cases by Area In Los Angeles",
        x="Area",y="Car Theft Cases", fill = "Year",
        caption="Data Provided by Los Angeles Police Department")
+#_____________________________________]
+
+print(eda_data %>% 
+  select(premis_desc,crm_cd_desc,date_occ) %>% 
+  filter(crm_cd_desc == "VEHICLE - STOLEN") %>% 
+  group_by(premis_desc,Year=year(date_occ)) %>% 
+  count(crm_cd_desc),n=77)
+
+
+
+
+
 
 
 
