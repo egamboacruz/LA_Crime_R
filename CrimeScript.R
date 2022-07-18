@@ -101,23 +101,16 @@ data <- data %>%
 #dr_no is a case number should be a string not numerical
 data$dr_no <- as.character(data$dr_no)
 
-
-
-print(data %>% 
-  select(crm_cd_desc,date_occ) %>% 
-  group_by(crm_cd_desc,Year=factor(year(date_occ))) %>% 
-  count(crm_cd_desc) %>% 
-  arrange(desc(n)),n=30)
-
-
 # Rank Crime In LA (by year)
 data %>% 
   select(crm_cd_desc,date_occ) %>% 
   group_by(crm_cd_desc,Year=factor(year(date_occ))) %>% 
   count(crm_cd_desc) %>% 
-  filter(n >= 6800) %>% 
-  ggplot(aes(x=crm_cd_desc,y=n,fill=Year)) +
+  ungroup() %>% 
+  top_n(10) %>% 
+  ggplot(aes(x=crm_cd_desc,y=n)) +
   geom_bar(stat = "identity") +
+  facet_wrap(~Year) +
   labs(title = "Top 10 Crimes In LA (2020-Present)",
        subtitle="Top ten most committed crimes in Los Angeles",
        x="CRIME", y="Cases",
