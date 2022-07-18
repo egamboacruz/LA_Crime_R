@@ -101,16 +101,42 @@ data <- data %>%
 #dr_no is a case number should be a string not numerical
 data$dr_no <- as.character(data$dr_no)
 
+
+
+print(data %>% 
+  select(crm_cd_desc,date_occ) %>% 
+  group_by(crm_cd_desc,Year=factor(year(date_occ))) %>% 
+  count(crm_cd_desc) %>% 
+  arrange(desc(n)),n=30)
+
+
 # Rank Crime In LA (by year)
+data %>% 
+  select(crm_cd_desc,date_occ) %>% 
+  group_by(crm_cd_desc,Year=factor(year(date_occ))) %>% 
+  count(crm_cd_desc) %>% 
+  filter(n >= 6800) %>% 
+  ggplot(aes(x=crm_cd_desc,y=n,fill=Year)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Top 10 Crimes In LA (2020-Present)",
+       subtitle="Top ten most committed crimes in Los Angeles",
+       x="CRIME", y="Cases",
+       fill="Year",
+       caption="Data Provided By Los Angeles Police Department") +
+  theme(axis.text.x = element_text(angle = 0,vjust = .5,size=8)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  scale_fill_manual(values = c("#219EBC","#023047","#FB8500"))
+  
+  
+
+# Comparison of crime from 2020-to present
 data %>% 
   select(date_occ) %>% 
   group_by(Year=year(date_occ)) %>% 
   count(date_occ) %>% 
   ggplot(aes(x=date_occ,y=n)) +
-  geom_point()
-  
+  geom_point() + geom_smooth()
 
- # Comparison of crime from 2020-to present
 
 # Crime Female vs Male
 
