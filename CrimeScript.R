@@ -101,41 +101,88 @@ data <- data %>%
 #dr_no is a case number should be a string not numerical
 data$dr_no <- as.character(data$dr_no)
 
+
+# _______________________EDA Table
+
+# EDA data table 2020-2021
+eda_Data <- data %>% 
+  filter(year(date_occ)<2022)
+
+
 # Rank Crime In LA (by year)
-data %>% 
+eda_Data %>% 
   select(crm_cd_desc,date_occ) %>% 
   group_by(crm_cd_desc,Year=factor(year(date_occ))) %>% 
   count(crm_cd_desc) %>% 
   ungroup() %>% 
-  top_n(10) %>% 
+  slice_max(n,n=20) %>% 
   ggplot(aes(x=crm_cd_desc,y=n)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~Year) +
-  labs(title = "Top 10 Crimes In LA (2020-Present)",
+  facet_wrap(~Year, scales="free_x") +
+  labs(title = "Top 10 Crimes In LA (2020-2021)",
        subtitle="Top ten most committed crimes in Los Angeles",
        x="CRIME", y="Cases",
        fill="Year",
        caption="Data Provided By Los Angeles Police Department") +
-  theme(axis.text.x = element_text(angle = 0,vjust = .5,size=8)) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
-  scale_fill_manual(values = c("#219EBC","#023047","#FB8500"))
-  
-  
+  theme(axis.text.x = element_text(angle = 0,vjust = .5,size=7)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) 
+# Top ten crimes remained the same throught 2020 and 2021
+#####################
 
 # Comparison of crime from 2020-to present
-data %>% 
+eda_Data %>% 
   select(date_occ) %>% 
   group_by(Year=year(date_occ)) %>% 
   count(date_occ) %>% 
   ggplot(aes(x=date_occ,y=n)) +
-  geom_point() + geom_smooth()
+  geom_point() + geom_smooth() +
+  labs(title = "Crime Through 2020 & 2021",
+       subtitle="Cases of crime through timespan of 2 years",
+       x="Time", y="Cases",
+       caption="Data Provided By Los Angeles Police Department")
 
 
 # Crime Female vs Male
+eda_Data %>% 
+  select(vict_sex,dr_no) %>% 
+  group_by(vict_sex) %>% 
+  count(vict_sex)
+  # gave me an ouput of X = Unkowns, and NA = Unkowns, H = Unknowns
+# I beleive those are callers that did not give out their idenetity
+# I will filter these out still enough meaningful data
+
+eda_Data %>% 
+  select(vict_sex,dr_no) %>% 
+  filter(vict_sex != "H",
+         vict_sex != "X",
+         vict_sex != is.na(vict_sex)) %>% 
+  group_by(vict_sex) %>% 
+  count(vict_sex)
+
 
 # Age group most affected by crime 
+eda_Data %>% 
+  select(vict_sex, age_group) %>% 
+  filter(vict_sex != "H",
+         vict_sex != "X",
+         vict_sex != is.na(vict_sex),
+         age_group != "Unkown") %>% 
+  group_by(age_group,vict_sex) %>% 
+  count(age_group) %>% 
+  ungroup() %>% 
+  mutate(perc =(n/sum(n)) *100)
 
-# Months affected by crime most
+
+# Days affected by crime most
+
+eda_Data %>% 
+  select(date_occ) %>% 
+  group_by(wday(date_occ,label = TRUE,abbr = TRUE)) %>% 
+  count(date_occ)
+
+
+
+
 
 # what time does crime happen most.
 
