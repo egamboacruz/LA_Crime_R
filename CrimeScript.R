@@ -4,10 +4,10 @@ library(lubridate)
 library(ggplot2)
 library(tidyr)
 library(reshape2)
-
+library(gtools)
 
 data<-read_csv(
-  "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=523509&$offset=100")
+  "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=527897&$offset=100")
 
 #Check table structure
 str(data)
@@ -124,8 +124,8 @@ eda_Data %>%
        x="CRIME", y="Cases",
        fill="Year",
        caption="Data Provided By Los Angeles Police Department") +
-  theme(axis.text.x = element_text(angle = 0,vjust = .5,size=7)) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) 
+  theme(axis.text.x = element_text(angle = 0,vjust =.5,size=7)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5))
 # Top ten crimes remained the same throught 2020 and 2021
 #####################
 
@@ -151,18 +151,25 @@ eda_Data %>%
 # I beleive those are callers that did not give out their idenetity
 # I will filter these out still enough meaningful data
 
-eda_Data %>% 
-  select(vict_sex,dr_no) %>% 
+# Male vs Female victims.
+eda_data %>% 
   filter(vict_sex != "H",
          vict_sex != "X",
          vict_sex != is.na(vict_sex)) %>% 
-  group_by(vict_sex) %>% 
-  count(vict_sex)
-
+  group_by(Year=year(date_occ),vict_sex) %>% 
+  summarise(cases = n()) %>% 
+  ggplot(aes(x=vict_sex,y=cases,fill=factor(Year))) +
+  geom_bar(stat="identity",position="dodge") +
+  labs(title = "Victims By Female Vs Male",
+       subtitle="Case Count Between Male & Women Victims 2020-2021",
+       x="Sex", y="Cases Count",
+       fill="Year",
+       caption="Data Provided By Los Angeles Police Department") +
+  geom_text(aes(label=cases),position=position_dodge(1),vjust=-.5) +
+  scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
 
 # Age group most affected by crime 
 eda_Data %>% 
-  select(vict_sex, age_group) %>% 
   filter(vict_sex != "H",
          vict_sex != "X",
          vict_sex != is.na(vict_sex),
@@ -170,22 +177,44 @@ eda_Data %>%
   group_by(age_group,vict_sex) %>% 
   count(age_group) %>% 
   ungroup() %>% 
-  mutate(perc =(n/sum(n)) *100)
-
-
-# Days affected by crime most
-
-eda_Data %>% 
-  select(date_occ) %>% 
-  group_by(wday(date_occ,label = TRUE,abbr = TRUE)) %>% 
-  count(date_occ)
-
-
-
-
-
-# what time does crime happen most.
+  mutate(perc =(n/sum(n)) *100) %>% 
+  ggplot(aes(x=age_group,y=n,fill=vict_sex)) +
+  geom_bar(stat="identity",position="dodge") +
+  geom_text(aes(label=n),position = position_dodge(1),vjust=-.5) +
+  labs(title = "Victims By Age Groups & Sex",
+       subtitle="Case Count Between Age Groups And Sex 2020-2021",
+       x="Age Group", y="Cases",
+       fill="Sex",
+       caption="Data Provided By Los Angeles Police Department") +
+  scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
 
 # What area has the most crime
+sum(is.na(eda_data$area_name)) #contains no nulls or empty cells
 
-# 
+eda_data %>% 
+  group_by(area_name,Year=year(date_occ)) %>% 
+  count(area_name) %>% 
+  ggplot(aes(x=area_name,y=n,fill=factor(Year))) +
+  geom_bar(stat = "identity") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  geom_text(aes(label=n),vjust=1.5,
+            position = "stack",
+            size=4,
+            color="White",
+            fontface="bold") +
+  labs(title = "Areas & Crime",
+       subtitle="Crime Cases In Particular Areas Of LA 2020-2021",
+       x="Area", y="Cases",
+       fill="Year",
+       caption="Data Provided By Los Angeles Police Department") +
+  scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
+
+
+
+
+
+
+
+
+
+
