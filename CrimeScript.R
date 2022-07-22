@@ -31,6 +31,9 @@ data$vict_descent[data$vict_descent == "D"] <- "Cambodian"
 data$vict_descent[data$vict_descent == "F"] <- "Filipino"
 data$vict_descent[data$vict_descent == "G"] <- "Guamaniam"
 data$vict_descent[data$vict_descent == "H"] <- "Hispanic/Latin/Mexican"
+# Removing mexican since they are hispanic or Latin 
+data$vict_descent[data$vict_descent == "Hispanic/Latin/Mexican"] <- "Hispanic/Latin"
+#############
 data$vict_descent[data$vict_descent == "I"] <- "American Indian"
 data$vict_descent[data$vict_descent == "J"] <- "Japanese"
 data$vict_descent[data$vict_descent == "K"] <- "Korean"
@@ -192,14 +195,26 @@ eda_Data %>%
   filter(vict_sex != "H",
          vict_sex != "X",
          vict_sex != is.na(vict_sex),
-         age_group != "Unkown") %>% 
-  group_by(vict_descent,vict_sex) %>% 
+         vict_descent != is.na(vict_descent)) %>% 
+  group_by(vict_descent,vict_sex,Year=year(date_occ)) %>% 
   count(vict_descent,vict_descent) %>% 
-  ggplot(aes(x=vict_descent,y=n,fill=vict_sex)) +
-  geom_bar(stat="identity")
+  ggplot(aes(x=reorder(vict_descent,n),y=n,fill=vict_sex)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(label=n), 
+            position = "stack",
+            hjust=0,
+            size=3,
+            color="black",
+            fontface="bold") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 18)) +
+  coord_flip() +
+  facet_wrap(~ vict_sex + Year) +
+  labs(title = "Descent & Crime",
+       subtitle="Crime Cases By Victim Descent In Los Angeles 2020-2021",
+       x="Descent", y="Cases",
+       fill="Sex",
+       caption="Data Provided By Los Angeles Police Department")
   
-
-
 
 # What area has the most crime
 sum(is.na(eda_data$area_name)) #contains no nulls or empty cells
@@ -224,7 +239,9 @@ eda_Data %>%
 
 
 
+# Premise description
 
+# Most used weapon 
 
 
 
