@@ -187,6 +187,20 @@ eda_Data %>%
        caption="Data Provided By Los Angeles Police Department") +
   scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
 
+# What race is most affected by crime in LA
+eda_Data %>% 
+  filter(vict_sex != "H",
+         vict_sex != "X",
+         vict_sex != is.na(vict_sex),
+         age_group != "Unkown") %>% 
+  group_by(vict_descent,vict_sex) %>% 
+  count(vict_descent,vict_descent) %>% 
+  ggplot(aes(x=vict_descent,y=n,fill=vict_sex)) +
+  geom_bar(stat="identity")
+  
+
+
+
 # What area has the most crime
 sum(is.na(eda_data$area_name)) #contains no nulls or empty cells
 
