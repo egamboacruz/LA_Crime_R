@@ -1,0 +1,29 @@
+---
+title: "Crime In Los Angeles"
+author: "Eduardo GamboaCruz"
+date: "`r Sys.Date()`"
+output: "html_document"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(reshape2)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+
+This is an exploratory data analysis of all the different kinds of crime committed in the city of Los Angeles within the years of **2020** & **2021**. The point of this analysis to investigate the who, what, why, when, and where of all the different crimes committed within two years in the city of Los Angeles.
+
+-   **The Who?:** Who are the victims (Race,Age,Sex)
+-   **The What?:** What crime were they a victim of
+-   **The When?:** When did this crime occur (Date and Time)
+-   **The Where?:** Where do these crimes occur (Area and Premises Location)
+
+This analysis will be an ongoing analysis with updates using data directly from the Los Angeles Police Department.
+
+# Methods
