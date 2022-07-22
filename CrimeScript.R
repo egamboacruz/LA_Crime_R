@@ -237,9 +237,14 @@ eda_Data %>%
        caption="Data Provided By Los Angeles Police Department") +
   scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
 
+str(eda_Data)
 
-
-# Premise description
+# Premise description   # Notes stack it by year only showing differences
+eda_Data %>% 
+  group_by(Hour=hour(datetime_occ)) %>% 
+  summarise(cases=n()) %>% 
+  ggplot(aes(x=Hour,y=cases)) +
+  geom_area()
 
 # Most used weapon 
 
