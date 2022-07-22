@@ -4,7 +4,6 @@ library(lubridate)
 library(ggplot2)
 library(tidyr)
 library(reshape2)
-library(gtools)
 
 data<-read_csv(
   "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=527897&$offset=100")
@@ -152,7 +151,7 @@ eda_Data %>%
 # I will filter these out still enough meaningful data
 
 # Male vs Female victims.
-eda_data %>% 
+eda_Data %>% 
   filter(vict_sex != "H",
          vict_sex != "X",
          vict_sex != is.na(vict_sex)) %>% 
@@ -191,7 +190,7 @@ eda_Data %>%
 # What area has the most crime
 sum(is.na(eda_data$area_name)) #contains no nulls or empty cells
 
-eda_data %>% 
+eda_Data %>% 
   group_by(area_name,Year=year(date_occ)) %>% 
   count(area_name) %>% 
   ggplot(aes(x=area_name,y=n,fill=factor(Year))) +
