@@ -110,6 +110,23 @@ data$dr_no <- as.character(data$dr_no)
 eda_Data <- data %>% 
   filter(year(date_occ)<2022)
 
+# Comparison of crime from 2020-to present
+eda_Data %>% 
+  group_by(Month =month(date_occ,label = TRUE,abbr = TRUE),
+           Year=factor(year(datetime_occ))) %>% 
+  summarise(cases=n()) %>% 
+  ggplot(aes(Month,y=cases,fill=Year)) +
+  geom_bar(stat="identity",position = position_dodge(.7),width = .8) +
+  geom_text(aes(label=cases),
+            position = position_dodge(1),
+            vjust=-.5,hjust=.5, size=3) +
+  labs(title = "Crime Of 2020-2021",
+       subtitle = "Comparing Crime Between The Years Of 2020-2021",
+       x="TIME", y="CASES",
+       caption="Data Provided By Los Angeles Police Department") +
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
+
 
 # Rank Crime In LA (by year)
 eda_Data %>% 
@@ -118,31 +135,21 @@ eda_Data %>%
   count(crm_cd_desc) %>% 
   ungroup() %>% 
   slice_max(n,n=20) %>% 
-  ggplot(aes(x=crm_cd_desc,y=n)) +
+  ggplot(aes(x=reorder(crm_cd_desc,n),y=n,fill=Year)) +
   geom_bar(stat = "identity") +
   facet_wrap(~Year, scales="free_x") +
+  geom_text(aes(label=n),vjust=-.5,hjust=.5, size=4) +
   labs(title = "Top 10 Crimes In LA (2020-2021)",
        subtitle="Top ten most committed crimes in Los Angeles",
-       x="CRIME", y="Cases",
+       x="CRIME", y="CASES",
        fill="Year",
        caption="Data Provided By Los Angeles Police Department") +
   theme(axis.text.x = element_text(angle = 0,vjust =.5,size=7)) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 5))
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
 # Top ten crimes remained the same throught 2020 and 2021
 #####################
-
-# Comparison of crime from 2020-to present
-eda_Data %>% 
-  select(date_occ) %>% 
-  group_by(Year=year(date_occ)) %>% 
-  count(date_occ) %>% 
-  ggplot(aes(x=date_occ,y=n)) +
-  geom_point() + geom_smooth() +
-  labs(title = "Crime Through 2020 & 2021",
-       subtitle="Cases of crime through timespan of 2 years",
-       x="Time", y="Cases",
-       caption="Data Provided By Los Angeles Police Department")
-
 
 # Crime Female vs Male
 eda_Data %>% 
@@ -162,13 +169,14 @@ eda_Data %>%
   summarise(cases = n()) %>% 
   ggplot(aes(x=vict_sex,y=cases,fill=factor(Year))) +
   geom_bar(stat="identity",position="dodge") +
-  labs(title = "Victims By Female Vs Male",
+  labs(title = "Female Vs Male",
        subtitle="Case Count Between Male & Women Victims 2020-2021",
-       x="Sex", y="Cases Count",
-       fill="Year",
+       x="SEX", y="CASES",
+       fill="YEAR",
        caption="Data Provided By Los Angeles Police Department") +
   geom_text(aes(label=cases),position=position_dodge(1),vjust=-.5) +
-  scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
 
 # Age group most affected by crime 
 eda_Data %>% 
@@ -180,7 +188,9 @@ eda_Data %>%
   count(age_group) %>% 
   ungroup() %>% 
   mutate(perc =(n/sum(n)) *100) %>% 
-  ggplot(aes(x=age_group,y=n,fill=vict_sex)) +
+  ggplot(aes(x=factor(age_group,
+                      levels = c("2-4","5-12","13-19","20-39","40-59","60+"))
+             ,y=n,fill=vict_sex)) +
   geom_bar(stat="identity",position="dodge") +
   geom_text(aes(label=n),position = position_dodge(1),vjust=-.5) +
   labs(title = "Victims By Age Groups & Sex",
@@ -188,7 +198,8 @@ eda_Data %>%
        x="Age Group", y="Cases",
        fill="Sex",
        caption="Data Provided By Los Angeles Police Department") +
-  scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
 
 # What race is most affected by crime in LA
 eda_Data %>% 
@@ -213,7 +224,9 @@ eda_Data %>%
        subtitle="Crime Cases By Victim Descent In Los Angeles 2020-2021",
        x="Descent", y="Cases",
        fill="Sex",
-       caption="Data Provided By Los Angeles Police Department")
+       caption="Data Provided By Los Angeles Police Department") +
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
   
 
 # What area has the most crime
@@ -227,7 +240,7 @@ eda_Data %>%
   scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
   geom_text(aes(label=n),vjust=1.5,
             position = "stack",
-            size=4,
+            size=3,
             color="White",
             fontface="bold") +
   labs(title = "Areas & Crime",
@@ -235,20 +248,31 @@ eda_Data %>%
        x="Area", y="Cases",
        fill="Year",
        caption="Data Provided By Los Angeles Police Department") +
-  scale_fill_manual(values = c("#0F4C5C","#FB8B24"))
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
 
 str(eda_Data)
 
-# Premise description   # Notes stack it by year only showing differences
+# Times it happens the most   # Notes stack it by year only showing differences
 eda_Data %>% 
-  group_by(Hour=hour(datetime_occ)) %>% 
+  group_by(Hour=hour(datetime_occ),Year=factor(year(date_occ))) %>% 
   summarise(cases=n()) %>% 
-  ggplot(aes(x=Hour,y=cases)) +
-  geom_area()
+  ggplot(aes(x=Hour,y=cases,colour=Year)) +
+  geom_line(aes(linetype=Year)) +
+  labs(title = "Time Of Day & Crime",
+       subtitle="What TIme Of The Day Does Most Crime Happen In LA 2020-2021",
+       x="Time", y="Cases",
+       fill="Year",
+       caption="Data Provided By Los Angeles Police Department") +
+  scale_color_manual(values = c("#87BFFF","#2667FF")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
 
 # Most used weapon 
-
-
+print(eda_Data %>% 
+  filter(weapon_desc != is.na(weapon_desc)) %>% 
+  group_by(Year=year(date_occ),weapon_desc) %>% 
+  count(weapon_desc) %>% 
+  arrange(desc(n)),n=143)
 
 
 
