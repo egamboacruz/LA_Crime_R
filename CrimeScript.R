@@ -5,13 +5,14 @@ library(ggplot2)
 library(tidyr)
 library(reshape2)
 
-#############################################################################
+################################## Original data ################################
 #if you want to see original data table run this
 original_data<-read_csv(
   "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=527897&$offset=100")
-##############################################################################
+################################### End of OD ##################################
 
 
+################################# Grab Data ##################################
 
 # Grab Data
 data<-read_csv(
@@ -19,8 +20,10 @@ data<-read_csv(
 
 #Check table structure
 str(data)
+############################## End of Grabbing Data ############################
 
-#___________________________ DATA CLEAN
+
+################################# DATA CLEAN ###################################
 # combine date and time occurred as a new column
 data <- data %>%
   unite("datetime_occ",
@@ -40,9 +43,9 @@ data$vict_descent[data$vict_descent == "D"] <- "Cambodian"
 data$vict_descent[data$vict_descent == "F"] <- "Filipino"
 data$vict_descent[data$vict_descent == "G"] <- "Guamaniam"
 data$vict_descent[data$vict_descent == "H"] <- "Hispanic/Latin/Mexican"
-# Removing mexican since they are hispanic or Latin 
+# Removing mexican since they are Hispanic or Latin 
 data$vict_descent[data$vict_descent == "Hispanic/Latin/Mexican"] <- "Hispanic/Latin"
-#############
+#
 data$vict_descent[data$vict_descent == "I"] <- "American Indian"
 data$vict_descent[data$vict_descent == "J"] <- "Japanese"
 data$vict_descent[data$vict_descent == "K"] <- "Korean"
@@ -89,7 +92,9 @@ data$crm_cd_desc[data$crm_cd_desc ==
                    "THEFT-GRAND ($950.01 & OVER)EXCPT,GUNS,FOWL,LIVESTK,PROD"] <-
   "THEFT-GRAND ($950.01 & OVER) EXCPT, GUNS, FOWL, LIVESTK, PROD"
 
-###############################################################################
+################################ End OF Data Clean #############################
+
+############################### Amend To Data ##################################
 #Create an age group, development stage,season,and time period of the day
 #helps with the analysis.
 # Development stage.
@@ -135,7 +140,7 @@ data <- data %>%
 data %>% 
   group_by(month(date_occ),season) %>% 
   summarise() # it worked.
-#########################
+
 
 
 # Period of the day.
@@ -155,11 +160,11 @@ data <- data %>%
 print(data %>% 
   group_by(hour(datetime_occ),time_period) %>% 
   summarise(),n=29)
-#################################  End  ########################################
+################################# End Of Amending  #############################
 
 
 
-##################### Exploratory Data Analysis ############################
+##################### Exploratory Data Analysis ################################
 # _________EDA Table
 # EDA data table 2020-2021
 eda_Data <- data %>% 
@@ -200,7 +205,7 @@ eda_Data %>%
   labs(title = "Top 10 Crimes In LA (2020-2021)",
        subtitle="Top ten most committed crimes in Los Angeles",
        x="CRIME", y="CASES",
-       fill="Year",
+       fill="SEX",
        caption="Data Provided By Los Angeles Police Department") +
   theme(axis.text.x = element_text(angle = 0,vjust =.5,size=7)) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
@@ -284,6 +289,11 @@ eda_Data %>%
   scale_fill_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
 
+# Top Ten Crimes That affect Age groups
+
+
+
+
 # What race is most affected by crime in LA
 eda_Data %>% 
   filter(vict_sex != "H",
@@ -310,6 +320,11 @@ eda_Data %>%
        caption="Data Provided By Los Angeles Police Department") +
   scale_fill_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+# Top ten crimes that affect different races.
+
+
+
   
 
 # What area has the most crime
@@ -334,6 +349,14 @@ eda_Data %>%
   scale_fill_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
 
+
+# Top Ten Crimes that affect the different areas
+
+
+
+
+
+
 str(eda_Data)
 
 # Times it happens the most   # Notes stack it by year only showing differences
@@ -352,8 +375,8 @@ eda_Data %>%
 
 
 
-
-
+ 
+############################### End Of EDA #####################################
 
 
 
