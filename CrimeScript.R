@@ -5,6 +5,15 @@ library(ggplot2)
 library(tidyr)
 library(reshape2)
 
+#############################################################################
+#if you want to see original data table run this
+original_data<-read_csv(
+  "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=527897&$offset=100")
+##############################################################################
+
+
+
+# Grab Data
 data<-read_csv(
   "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=527897&$offset=100")
 
@@ -72,7 +81,9 @@ print(data %>%
         tail(),n=100)
 # out of over 500,000 observations it seems that -1 is a mistake
 
-#Create an age group and a development stage. helps with the analysis.
+###############################################################################
+#Create an age group, development stage,season,and time period of the day
+#helps with the analysis.
 # Development stage.
 data <- data %>%
   mutate(
@@ -99,6 +110,45 @@ data <- data %>%
       vict_age > 59  ~ "60+"
     )
   )
+
+# season
+data <- data %>% 
+  mutate(
+    season = dplyr::case_when(
+      month(date_occ) >=1 & month(date_occ) <= 2 ~ "Winter",
+      month(date_occ) > 2 & month(date_occ) <= 5 ~ "Spring",
+      month(date_occ) > 5 & month(date_occ) <= 8 ~ "Summer",
+      month(date_occ) > 8 & month(date_occ) <= 11 ~ "Autumn",
+      month(date_occ) > 11 ~ "Winter"
+    )
+  )
+
+# Check if script above worked.
+data %>% 
+  group_by(month(date_occ),season) %>% 
+  summarise() # it worked.
+#########################
+
+
+# Period of the day.
+data <- data %>% 
+  mutate(
+    time_period = dplyr::case_when(
+      as.numeric(time_occ) > 0000 & as.numeric(time_occ) <= 0459 ~ "Night",
+      as.numeric(time_occ) > 0459 & as.numeric(time_occ) <= 0959 ~ "Early Morning",
+      as.numeric(time_occ) > 0959 & as.numeric(time_occ) <= 1159 ~ "Late Morning",
+      as.numeric(time_occ) > 1159 & as.numeric(time_occ) <= 1659 ~ "Early Noon",
+      as.numeric(time_occ) > 1659 & as.numeric(time_occ) <= 1759 ~ "Late Noon",
+      as.numeric(time_occ) > 1759 & as.numeric(time_occ) <= 1859 ~ "Evening",
+      as.numeric(time_occ) > 1859 & as.numeric(time_occ) <= 2359 ~ "Night"
+    )
+  )
+# Check if script above worked.
+print(data %>% 
+  group_by(hour(datetime_occ),time_period) %>% 
+  summarise(),n=29)
+#################################  End  ########################################
+
 
 #dr_no is a case number should be a string not numerical
 data$dr_no <- as.character(data$dr_no)
@@ -258,7 +308,7 @@ eda_Data %>%
   group_by(Hour=hour(datetime_occ),Year=factor(year(date_occ))) %>% 
   summarise(cases=n()) %>% 
   ggplot(aes(x=Hour,y=cases,colour=Year)) +
-  geom_line(aes(linetype=Year)) +
+  geom_line(aes(linetype=Year),size=1) +
   labs(title = "Time Of Day & Crime",
        subtitle="What TIme Of The Day Does Most Crime Happen In LA 2020-2021",
        x="Time", y="Cases",
@@ -267,12 +317,15 @@ eda_Data %>%
   scale_color_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
 
-# Most used weapon 
-print(eda_Data %>% 
-  filter(weapon_desc != is.na(weapon_desc)) %>% 
-  group_by(Year=year(date_occ),weapon_desc) %>% 
-  count(weapon_desc) %>% 
-  arrange(desc(n)),n=143)
+
+# What crimes or most likely to happen to females and Males from all age groups.
+
+eda_Data %>% 
+  filter(vict_sex == "F",vict_age != -1,vict_age != 0) %>% 
+  group_by(crm_cd_desc) %>% 
+  count(crm_cd_desc) %>% 
+  arrange(desc(n))
+
 
 
 
