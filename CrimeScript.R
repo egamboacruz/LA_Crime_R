@@ -351,7 +351,11 @@ eda_Data %>%
 
 
 # Top Ten Crimes that affect the different areas
-
+eda_Data %>% 
+  group_by(area_name,crm_cd_desc) %>% 
+  summarise(cases=n()) %>% 
+  top_n(n=10,wt=cases) %>% 
+  ggplot(aes(x=crm_cd_desc,y=cases))
 
 
 
