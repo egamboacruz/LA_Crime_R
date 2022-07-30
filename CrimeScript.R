@@ -350,18 +350,26 @@ eda_Data %>%
   theme(plot.title = element_text(lineheight=.8, face="bold"))
 
 
-# Top Ten Crimes that affect the different areas
+# Top Five Crimes that affect the different areas
 eda_Data %>% 
   group_by(area_name,crm_cd_desc) %>% 
   summarise(cases=n()) %>% 
-  top_n(n=10,wt=cases) %>% 
-  ggplot(aes(x=crm_cd_desc,y=cases))
+  top_n(n=5,wt=cases) %>% 
+  ggplot(aes(x=reorder(area_name,cases),
+             y=cases,
+             fill=reorder(crm_cd_desc,-cases))) +
+  geom_bar(stat="identity") +
+  coord_flip() +
+  scale_fill_manual(values = c("#54478C","#2C699A",
+                             "#048BA8","#0DB39E",
+                             "#16DB93","#83E377",
+                             "#B9E769","#EFEA5A",
+                             "#F1C453","#F29E4C")) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5))
 
 
 
 
-
-str(eda_Data)
 
 # Times it happens the most   # Notes stack it by year only showing differences
 eda_Data %>% 
