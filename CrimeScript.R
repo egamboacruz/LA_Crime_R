@@ -256,9 +256,9 @@ eda_Data %>%
   theme(axis.text = element_text(size = 7)) +
   geom_text(aes(label=cases),vjust=-0.5) +
   labs(title = "TOP 10 CRIME BY SEX",
-       subtitle="Case Count Between Age Groups And Sex 2020-2021",
-       x="CRIME", y="Cases",
-       fill="YEAR",
+       subtitle="Top 10 crimes committed on Females and Males the most in (2020-2021)",
+       x="CRIME", y="CASES",
+       fill="SEX",
        caption="Data Provided By Los Angeles Police Department") +
   scale_fill_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
@@ -371,19 +371,42 @@ eda_Data %>%
 
 
 
-# Times it happens the most   # Notes stack it by year only showing differences
+# Times it happens the most
 eda_Data %>% 
-  group_by(Hour=hour(datetime_occ),Year=factor(year(date_occ))) %>% 
+  group_by(time=hour(datetime_occ),Year=factor(year(date_occ))) %>% 
   summarise(cases=n()) %>% 
-  ggplot(aes(x=Hour,y=cases,colour=Year)) +
-  geom_line(aes(linetype=Year),size=1) +
+  ggplot(aes(x=time,y=cases,fill=Year)) +
+  geom_histogram(stat = "identity") +
+  facet_wrap(~Year) +
   labs(title = "Time Of Day & Crime",
        subtitle="What TIme Of The Day Does Most Crime Happen In LA 2020-2021",
        x="Time", y="Cases",
        fill="Year",
        caption="Data Provided By Los Angeles Police Department") +
-  scale_color_manual(values = c("#87BFFF","#2667FF")) +
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+# The later in the day the more crime that happens BUT 
+# It seems that there is an out-lair 1300 or 1:00 PM 
+# Seems like a lot of crime happens at 1200 or 12:00 PM 
+# What I will search for 
+
+# What type of crime is happening
+eda_Data %>% 
+  filter(hour(datetime_occ) == 12) %>% 
+  group_by(Year=year(datetime_occ),crm_cd_desc) %>% 
+  summarise(cases=n()) %>% 
+  arrange(desc(cases)) %>% 
+  slice_head(n=10)
+
+
+# What ages are being affected
+
+# What descent
+
+
+
+
 
 
 
