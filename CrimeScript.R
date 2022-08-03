@@ -360,6 +360,9 @@ eda_Data %>%
              fill=reorder(crm_cd_desc,-cases))) +
   geom_bar(stat="identity") +
   coord_flip() +
+  labs(title = "Top Crimes Committed By Area",
+       subtitle = "Top 5 Crimes Committed in all areas reporting to the LAPD",
+       x="AREA",y="CASES",fill="CRIME") +
   scale_fill_manual(values = c("#54478C","#2C699A",
                              "#048BA8","#0DB39E",
                              "#16DB93","#83E377",
@@ -369,8 +372,7 @@ eda_Data %>%
 
 
 
-
-
+############################### Time Analysis ##################################
 # Times it happens the most
 eda_Data %>% 
   group_by(time=hour(datetime_occ),Year=factor(year(date_occ))) %>% 
@@ -386,25 +388,68 @@ eda_Data %>%
   scale_fill_manual(values = c("#87BFFF","#2667FF")) +
   theme(plot.title = element_text(lineheight=.8, face="bold"))
 
+
 # The later in the day the more crime that happens BUT 
 # It seems that there is an out-lair 1300 or 1:00 PM 
 # Seems like a lot of crime happens at 1200 or 12:00 PM 
 # What I will search for 
 
 # What type of crime is happening
+print(eda_Data %>% 
+        filter(hour(datetime_occ) == 12) %>% 
+        group_by(Year=year(datetime_occ),crm_cd_desc) %>% 
+        summarise(cases=n()) %>% 
+        mutate(perc = (cases/sum(cases))*100 ) %>% 
+        arrange(desc(cases)),n=214)
+
+# Top 5 crime for the time 12:00 PM
 eda_Data %>% 
   filter(hour(datetime_occ) == 12) %>% 
   group_by(Year=year(datetime_occ),crm_cd_desc) %>% 
   summarise(cases=n()) %>% 
+  mutate(perc = (cases/sum(cases))*100 ) %>% 
   arrange(desc(cases)) %>% 
-  slice_head(n=10)
+  top_n(n = 10, wt = cases)  %>% 
+  ggplot(aes(x=reorder(crm_cd_desc,cases),y=cases,fill=factor(Year))) +
+  geom_bar(stat="identity",position = position_dodge(1)) +
+  facet_wrap(~Year) +
+  labs(title = "Top 5 Crimes at 12PM",
+       subtitle="Top 5 crimes that occurr at 12PM",
+       x="Crime", y="Cases",
+       fill="Year",
+       caption="Data Provided By Los Angeles Police Department") +
+  scale_fill_manual(values = c("#87BFFF","#2667FF")) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5))
+## identity theft makes up 12.2 percent of the crime committed in the afternoon 
+# I need to check if that's just the time the department decides to put or if its
+# really occurring at that time.
+eda_Data %>% 
+  select(datetime_occ,crm_cd_desc) %>% 
+  filter(crm_cd_desc == "THEFT OF IDENTITY")
+eda_Data %>% 
+  select(datetime_occ,crm_cd_desc) %>% 
+  filter(crm_cd_desc == "THEFT OF IDENTITY") %>% 
+  tail()
+# It seems that identity theft happens at all time of the day but mostly at 12:00PM
+eda_Data %>% 
+  filter(hour(datetime_occ) == 12,crm_cd_desc == "THEFT OF IDENTITY") %>% 
+  group_by(Year=year(datetime_occ),crm_cd_desc,age_group) %>% 
+  summarise(cases=n()) %>% 
+  mutate(perc = (cases/sum(cases))*100 ) %>% 
+  arrange(desc(cases))
 
 
 # What ages are being affected
+eda_Data %>% 
+  filter(hour(datetime_occ) == 12) %>% 
+  group_by(Year=year(datetime_occ),crm_cd_desc,age_group) %>% 
+  summarise(cases=n()) %>% 
+  arrange(desc(cases))
 
+  
 # What descent
 
-
+############################### End Of Time Analysis ###########################
 
 
 
