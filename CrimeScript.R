@@ -63,12 +63,22 @@ min(data$vict_age) # -1 ??? what does that mean
 max(data$vict_age) # 120 years old.
 
 # Check if ages -1:1 years are victim ages or unknowns
-#count how many ages between -1 and 1
-data %>%
-  select(vict_age,vict_sex) %>% 
-  filter(between(vict_age,-1,1), vict_sex != "X") %>% 
-  group_by(vict_sex,vict_age) %>% 
-  count(vict_sex)
+#count how many cases with the victim age less than 1
+data %>% 
+  filter(vict_age < 1) %>% 
+  group_by(vict_age) %>% 
+  count(crm_cd_desc) %>% 
+  summarise(total=sum(n))
+
+# what crimes contain victim ages less than one
+print(data %>% 
+  filter(vict_age < 1) %>% 
+  group_by(crm_cd_desc, vict_age) %>% 
+  count(vict_age) %>% 
+    arrange(desc(vict_age)),n=138)
+  
+
+
 
 # I strongly believe Age zero stands for someone calling 911 
 # their age was not given or recorded. 

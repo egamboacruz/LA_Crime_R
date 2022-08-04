@@ -1,5 +1,5 @@
 ---
-title: "Crime In Los Angeles"
+title: "Crime In Los Angeles:: TL;DR"
 author: "Eduardo GamboaCruz"
 date: "`r Sys.Date()`"
 output: "html_document"
@@ -26,4 +26,90 @@ This is an exploratory data analysis of all the different kinds of crime committ
 
 This analysis will be an ongoing analysis with updates using data directly from the Los Angeles Police Department.
 
-# Methods
+# Data
+This data is collected directly from the Los Angeles Public-Safety.
+
+- https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8
+
+The code below shows the line of code use to collect the data.
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+data<-read_csv(
+  "https://data.lacity.org/resource/2nrs-mtv8.csv?$limit=527897&$offset=100")
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+data<-read_csv("/Users/eduardogamboa/Documents/CSV_Files/LA_CrimeData(2020-2021).csv")
+```
+# Processing The Data
+
+Combining columns date_occ and time_occ will make categorizing more efficient, using functions like year(), month(), and hour() to find the month year and hour.
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+data <- data %>%
+  unite("datetime_occ",
+        sep = " ",
+        date_occ:time_occ,na.rm = TRUE,
+        remove = FALSE)
+```
+#### Replacing Victim Descent Code
+The date uses letter codes for victims, I believe it makes it more difficult to read since there are 16 different codes so I replaces them with full words describing the victims descent.
+
+- The Code shows a single letter code (LEFT) being replace by the whole world (RIGHT).
+- The data Los Angeles public-safety website gives you the meaning of the codes.
+```{r echo=TRUE}
+data$vict_descent[data$vict_descent == "A"] <- "Asian"
+data$vict_descent[data$vict_descent == "B"] <- "Black"
+data$vict_descent[data$vict_descent == "C"] <- "Chineese"
+data$vict_descent[data$vict_descent == "D"] <- "Cambodian"
+data$vict_descent[data$vict_descent == "F"] <- "Filipino"
+data$vict_descent[data$vict_descent == "G"] <- "Guamaniam"
+data$vict_descent[data$vict_descent == "H"] <- "Hispanic/Latin/Mexican"
+# Removing mexican since they are Hispanic or Latin 
+data$vict_descent[data$vict_descent == "Hispanic/Latin/Mexican"] <- "Hispanic/Latin"
+#
+data$vict_descent[data$vict_descent == "I"] <- "American Indian"
+data$vict_descent[data$vict_descent == "J"] <- "Japanese"
+data$vict_descent[data$vict_descent == "K"] <- "Korean"
+data$vict_descent[data$vict_descent == "L"] <- "Laotian"
+data$vict_descent[data$vict_descent == "O"] <- "Other"
+data$vict_descent[data$vict_descent == "P"] <- "Pacific Islander"
+data$vict_descent[data$vict_descent == "S"] <- "Samoan"
+data$vict_descent[data$vict_descent == "U"] <- "Hawaiian"
+data$vict_descent[data$vict_descent == "V"] <- "Vietnamese"
+data$vict_descent[data$vict_descent == "W"] <- "White"
+data$vict_descent[data$vict_descent == "X"] <- "Unkown"
+data$vict_descent[data$vict_descent == "Z"] <- "Asian Indian"
+```
+
+I knew the next thing to process was going to be the victims age.
+I wanted to check the 
+
+- Youngest age of the victims.
+- Oldest age of the victims.
+
+```{r}
+min(data$vict_age) # Youngest
+max(data$vict_age) # Oldest
+```
+This out-put told me that the youngest victim was -1 and I instantly realized that was not right. The oldest age reported was 120 which is surely possible so I wanted to take a closer look at these ages.
+
+First I wanted to know how many cases contained a victim age less than 1.
+```{r}
+data %>% 
+  filter(vict_age < 1) %>% 
+  group_by(vict_age) %>% 
+  count(crm_cd_desc) %>% 
+  summarise(total=sum(n))
+```
+The data shows that there are a total of **17** cases with the age of **-1** and **98523** cases with the victim age of **0**.
+
+#### Deeper Look
+```{r}
+print(data %>% 
+  filter(vict_age < 1) %>% 
+  group_by(crm_cd_desc, vict_age) %>% 
+  count(vict_age) %>% 
+    arrange(desc(vict_age)),n=138)
+```
+The table above shows all the crimes committed where the victim was younger than 1 years old.While looking through the ages the only thing that stood out to me was any observation that contained Child in it, or animal. I believe the others means the age is unknown, the report was most likely made anonymously by phone.
+
+
