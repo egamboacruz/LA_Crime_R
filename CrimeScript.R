@@ -4,6 +4,7 @@ library(lubridate)
 library(ggplot2)
 library(tidyr)
 library(reshape2)
+library(data.table)
 
 ################################## Original data ################################
 #if you want to see original data table run this
@@ -24,6 +25,7 @@ str(data)
 
 
 ################################# DATA CLEAN ###################################
+
 # combine date and time occurred as a new column
 data <- data %>%
   unite("datetime_occ",
@@ -33,6 +35,7 @@ data <- data %>%
 
 #format it to POSIXct
 data$datetime_occ <- ymd_hm(data$datetime_occ)
+
 
 # I want to change victim descent from abbreviation to the whole word.
 # Could also use dplyr::case_when
@@ -59,10 +62,15 @@ data$vict_descent[data$vict_descent == "W"] <- "White"
 data$vict_descent[data$vict_descent == "X"] <- "Unkown"
 data$vict_descent[data$vict_descent == "Z"] <- "Asian Indian"
 
+
+
+########## ClEAN AGE ###############
+
 min(data$vict_age) # -1 ??? what does that mean
 max(data$vict_age) # 120 years old.
 
 # Check if ages -1:1 years are victim ages or unknowns
+
 #count how many cases with the victim age less than 1
 data %>% 
   filter(vict_age < 1) %>% 
@@ -73,28 +81,37 @@ data %>%
 # what crimes contain victim ages less than one
 print(data %>% 
   filter(vict_age < 1) %>% 
-  group_by(crm_cd_desc, vict_age) %>% 
+  group_by(crm_cd_desc) %>% 
   count(vict_age) %>% 
     arrange(desc(vict_age)),n=138)
-  
+# Most of the crimes committed on victims less than 1 year of age are not possible
+# Unless its a crime against a child violent or sexual.
+# most crimes against victims younger than 1 are either an error but more possibly 
+# a mark for Unknown.
 
-
-
-# I strongly believe Age zero stands for someone calling 911 
-# their age was not given or recorded. 
+# what crimes contain victim ages less than one, and are Male or female and 
+# does not have an NA value in Vict_descent column
 print(data %>% 
-        select(vict_age,vict_sex,crm_cd_desc) %>% 
-        filter(vict_age == 0,vict_sex != "X") %>% 
-        tail(),n=100)
+        filter(vict_age < 1,vict_sex %in% c("F","M"), vict_descent != "NA") %>% 
+        group_by(crm_cd_desc) %>% 
+        count(vict_age) %>% 
+        arrange(desc(vict_age)),n=138)
+# Count
+data %>% 
+  filter(vict_age < 1,vict_sex %in% c("F","M"), vict_descent != "NA") %>% 
+  summarise(sum(n()))
+#
+data %>% 
+        filter(vict_age < 1, vict_sex %in% c("X","NA"), is.na(vict_descent)) %>% 
+        summarise(sum(n()))
 
-# checking what age -1 represents
-print(data %>% 
-        select(vict_age,vict_sex,crm_cd_desc) %>% 
-        filter(vict_age == -1,vict_sex != "X") %>% 
-        tail(),n=100)
-# out of over 500,000 observations it seems that -1 is a mistake
+## This analysis leads me to believe that any crime with the age of 0 is an error
+# in the data entry process or an unknown.
+# I will remove the zero age from the data I will be using for EDA.
+################################ AGE CLEANING END #############################
 
-#dr_no is a case number should be a string not numerical
+
+# dr_no is a case number should be a string not numerical
 data$dr_no <- as.character(data$dr_no)
 
 # crime description didnt have spaces it was affecting text wrap in plot
@@ -104,7 +121,9 @@ data$crm_cd_desc[data$crm_cd_desc ==
 
 ################################ End OF Data Clean #############################
 
-############################### Amend To Data ##################################
+
+############################### Processing Data ################################
+
 #Create an age group, development stage,season,and time period of the day
 #helps with the analysis.
 # Development stage.
@@ -178,7 +197,7 @@ print(data %>%
 # _________EDA Table
 # EDA data table 2020-2021
 eda_Data <- data %>% 
-  filter(year(date_occ)<2022)
+  filter(year(date_occ)<2022, vict_age > 1)
 # ___________________________________________
 
 
@@ -338,7 +357,7 @@ eda_Data %>%
   
 
 # What area has the most crime
-sum(is.na(eda_data$area_name)) #contains no nulls or empty cells
+sum(is.na(eda_Data$area_name)) #contains no nulls or empty cells
 
 eda_Data %>% 
   group_by(area_name,Year=year(date_occ)) %>% 
@@ -405,12 +424,13 @@ eda_Data %>%
 # What I will search for 
 
 # What type of crime is happening
-print(eda_Data %>% 
-        filter(hour(datetime_occ) == 12) %>% 
-        group_by(Year=year(datetime_occ),crm_cd_desc) %>% 
-        summarise(cases=n()) %>% 
-        mutate(perc = (cases/sum(cases))*100 ) %>% 
-        arrange(desc(cases)),n=214)
+eda_Data %>% 
+  filter(hour(datetime_occ) == 12) %>% 
+  group_by(Year=year(datetime_occ),crm_cd_desc) %>% 
+  summarise(cases=n()) %>% 
+  mutate(perc = (cases/sum(cases))*100 ) %>% 
+  arrange(desc(cases)) %>% 
+  summarise()
 
 # Top 5 crime for the time 12:00 PM
 eda_Data %>% 

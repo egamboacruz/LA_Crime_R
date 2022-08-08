@@ -110,6 +110,7 @@ print(data %>%
   count(vict_age) %>% 
     arrange(desc(vict_age)),n=138)
 ```
-The table above shows all the crimes committed where the victim was younger than 1 years old.While looking through the ages the only thing that stood out to me was any observation that contained Child in it, or animal. I believe the others means the age is unknown, the report was most likely made anonymously by phone.
+The table above shows all the crimes committed where the victim was younger than **1** year of age. While looking through the ages the only thing that stood out to me was any observation that contained the key word "Child" in it, or "animal". The data seems to show unknown age as **-1** or **0** unless the observation contains the keyword "Child" in it.
+
 
 
