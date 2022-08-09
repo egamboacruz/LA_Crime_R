@@ -92,22 +92,20 @@ print(data %>%
 # what crimes contain victim ages less than one, and are Male or female and 
 # does not have an NA value in Vict_descent column
 print(data %>% 
-        filter(vict_age < 1,vict_sex %in% c("F","M"), vict_descent != "NA") %>% 
+        filter(vict_age < 1,vict_sex %in% c("F","M"),  !is.na(vict_descent)) %>% 
         group_by(crm_cd_desc) %>% 
         count(vict_age) %>% 
-        arrange(desc(vict_age)),n=138)
-# Count
+        arrange(desc(vict_age)) %>% 
+        summarise(total=sum(n)),n=138)
+# Count observation that contain, Female or Male value and victim descent is not NA
 data %>% 
-  filter(vict_age < 1,vict_sex %in% c("F","M"), vict_descent != "NA") %>% 
+  filter(vict_age < 1,vict_sex %in% c("F","M"), !is.na(vict_descent)) %>% 
   summarise(sum(n()))
-#
-data %>% 
-        filter(vict_age < 1, vict_sex %in% c("X","NA"), is.na(vict_descent)) %>% 
-        summarise(sum(n()))
 
 ## This analysis leads me to believe that any crime with the age of 0 is an error
 # in the data entry process or an unknown.
-# I will remove the zero age from the data I will be using for EDA.
+# I will remove the zero age from the data that does not contain sex, or descent
+# 
 ################################ AGE CLEANING END #############################
 
 
@@ -198,12 +196,13 @@ print(data %>%
 # EDA data table 2020-2021
 eda_Data <- data %>% 
   filter(year(date_occ)<2022, vict_age > 1)
+str(eda_Data)
 # ___________________________________________
 
 
 # Comparison of crime from 2020-to present
 eda_Data %>% 
-  group_by(Month =month(date_occ,label = TRUE,abbr = TRUE),
+  group_by(Month = month(date_occ,label = TRUE,abbr = TRUE),
            Year=factor(year(datetime_occ))) %>% 
   summarise(cases=n()) %>% 
   ggplot(aes(Month,y=cases,fill=Year)) +
@@ -392,17 +391,19 @@ eda_Data %>%
   labs(title = "Top Crimes Committed By Area",
        subtitle = "Top 5 Crimes Committed in all areas reporting to the LAPD",
        x="AREA",y="CASES",fill="CRIME") +
-  scale_fill_manual(values = c("#54478C","#2C699A",
-                             "#048BA8","#0DB39E",
-                             "#16DB93","#83E377",
-                             "#B9E769","#EFEA5A",
-                             "#F1C453","#F29E4C")) +
+  scale_fill_manual(values = c("#F29E4C","#F1C453",
+                               "#EFEA5A","#B9E769",
+                               "#83E377","#16DB93",
+                               "#0DB39E","#048BA8",
+                               "#2C699A","#54478C")) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 5))
 
 
 
 ############################### Time Analysis ##################################
 # Times it happens the most
+str(eda_Data)
+
 eda_Data %>% 
   group_by(time=hour(datetime_occ),Year=factor(year(date_occ))) %>% 
   summarise(cases=n()) %>% 
@@ -429,8 +430,7 @@ eda_Data %>%
   group_by(Year=year(datetime_occ),crm_cd_desc) %>% 
   summarise(cases=n()) %>% 
   mutate(perc = (cases/sum(cases))*100 ) %>% 
-  arrange(desc(cases)) %>% 
-  summarise()
+  arrange(desc(cases))
 
 # Top 5 crime for the time 12:00 PM
 eda_Data %>% 
