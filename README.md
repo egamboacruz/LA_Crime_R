@@ -8,6 +8,7 @@
 * Tidyverse package
 * API - NoSql
 * r-markdown 
+* HTML
 
  Data provided by The City of Los Angeles
  https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8
