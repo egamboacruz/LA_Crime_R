@@ -6,7 +6,7 @@
 * R
 * R Studio
 * Tidyverse package
-* NoSql
+* API - NoSql
 * r-markdown 
 
  Data provided by The City of Los Angeles
