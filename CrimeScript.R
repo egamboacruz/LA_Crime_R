@@ -197,7 +197,7 @@ data <- data %>%
       vict_sex == "M" ~ 1,
       vict_sex == "H" ~ 2,
       vict_sex == "X" ~ 2,
-      vict_sex == NA ~ 3,
+      vict_sex == NA ~ 2,
     )
   )
 
@@ -269,10 +269,6 @@ eda_Data %>%
 
 
 
-
-
-
-<<<<<<< HEAD
 
 # What race is most affected by crime in LA
 eda_Data %>% 
@@ -392,10 +388,6 @@ eda_Data %>%
   group_by(age_group) %>% 
   count(crm_cd_desc)
 
-````
-
-
-
 # Top 5 crime for the time 12:00 PM
 eda_Data %>% 
   filter(hour(datetime_occ) == 12) %>% 
@@ -444,8 +436,6 @@ eda_Data %>%
 # What descent
 
 ############################### End Of Time Analysis ###########################
-=======
->>>>>>> dcb803154031cb341523b79d46263da0cc816aeb
 
 
 
