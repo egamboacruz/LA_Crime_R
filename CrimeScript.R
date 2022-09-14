@@ -150,7 +150,6 @@ data <- data %>%
       vict_age > 59  ~ "60+"
     )
   )
-
 # season
 data <- data %>% 
   mutate(
@@ -431,6 +430,18 @@ eda_Data %>%
   summarise(cases=n()) %>% 
   mutate(perc = (cases/sum(cases))*100 ) %>% 
   arrange(desc(cases))
+
+
+eda_Data %>% 
+  filter(crm_cd_desc == 'THEFT OF IDENTITY', 
+         hour(datetime_occ) == 12,
+         vict_sex != 'NA', vict_sex != 'X') %>% 
+  group_by(age_group) %>% 
+  count(crm_cd_desc)
+
+````
+
+
 
 # Top 5 crime for the time 12:00 PM
 eda_Data %>% 
