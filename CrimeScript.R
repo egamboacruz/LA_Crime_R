@@ -250,7 +250,8 @@ eda_Data %>%
 # total crime by age group
 eda_Data %>% 
   group_by(year = factor(year(datetime_occ)), factor(age_group)) %>% 
-  summarise(cases = n())
+  summarise(cases = n()) %>% 
+  ggplot()
 
 
 
